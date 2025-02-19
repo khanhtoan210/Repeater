@@ -2,8 +2,8 @@
 #include <SPI.h>
 #include "nRF24L01.h"
 #include "RF24.h"
-#include <Arduino_FreeRTOS.h>
-#include <task.h>
+// #include <Arduino_FreeRTOS.h>
+// #include <task.h>
 RF24 radio(9, 10);
 
 const uint64_t pipe1 = 0xF0F0F0F0A1;//tx
@@ -36,28 +36,28 @@ void setup() {
   radio.setPALevel(RF24_PA_MAX);
   radio.setDataRate(RF24_250KBPS);
   radio.startListening();
-  xTaskCreate(receiverTask, "Receiver Task", 10000, NULL, 1, NULL);
-  xTaskCreate(transmitterTask, "Transmitter Task", 10000, NULL, 1, NULL);
+  // xTaskCreate(receiverTask, "Receiver Task", 10000, NULL, 1, NULL);
+  // xTaskCreate(transmitterTask, "Transmitter Task", 10000, NULL, 1, NULL);
 
-  vTaskStartScheduler();
+  // vTaskStartScheduler();
 }
 void loop() {
-  // radio.startListening();
-  // radio.read(&payload, sizeof(payload));
-  // Serial.print("Counter: "); Serial.print(payload.counter); Serial.print(' ');
-  // Serial.print("Parity: "); Serial.print(payload.parity); Serial.print(' ');
-  // Serial.print("Data: "); Serial.println(payload.data);
-  // delay(50);
-  // if (isValidPacket(payload)) {
-  //   updateLastPacket(payload);
-  //   radio.stopListening();
-  //   bool ok = radio.write(&payload, sizeof(payload));
-  //   Serial.print(" - ACK: ");
-  //   Serial.println(ok);
-  // } else {
-  //   Serial.println("Duplicate packet ignored");
-  // }  
-  // delay(50);
+  radio.startListening();
+  radio.read(&payload, sizeof(payload));
+  Serial.print("Counter: "); Serial.print(payload.counter); Serial.print(' ');
+  Serial.print("Parity: "); Serial.print(payload.parity); Serial.print(' ');
+  Serial.print("Data: "); Serial.print(payload.data);
+  delay(50);
+  if (isValidPacket(payload)) {
+    updateLastPacket(payload);
+    radio.stopListening();
+    bool ok = radio.write(&payload, sizeof(payload));
+    Serial.print(" - ACK: ");
+    Serial.println(ok);
+  } else {
+    Serial.println("Duplicate packet ignored");
+  }  
+  delay(50);
 
 }
 bool isValidPacket(Payload& payload) {
@@ -68,29 +68,29 @@ void updateLastPacket(Payload& payload) {
   lastCounter = payload.counter;
   lastParity = payload.parity;
 }
-void receiverTask(void *pvParameters) {
+// void receiverTask(void *pvParameters) {
 
-  while (radio.available()) {
-    radio.startListening();
-    radio.read(&payload, sizeof(payload));
-    Serial.print("Counter: "); Serial.print(payload.counter); Serial.print(' ');
-    Serial.print("Parity: "); Serial.print(payload.parity); Serial.print(' ');
-    Serial.print("Data: "); Serial.println(payload.data);
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-  }
-}
-void transmitterTask(void *pvParameters) {
-  while(1){
-    if (isValidPacket(payload)) {
-      updateLastPacket(payload);
-      radio.stopListening();
-      bool ok = radio.write(&payload, sizeof(payload));
-      Serial.print(" - ACK: ");
-      Serial.println(ok);
-    } else {
-      Serial.println("Duplicate packet ignored");
-    }  
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-  }
+//   while (radio.available()) {
+//     radio.startListening();
+//     radio.read(&payload, sizeof(payload));
+//     Serial.print("Counter: "); Serial.print(payload.counter); Serial.print(' ');
+//     Serial.print("Parity: "); Serial.print(payload.parity); Serial.print(' ');
+//     Serial.print("Data: "); Serial.println(payload.data);
+//     vTaskDelay(50 / portTICK_PERIOD_MS);
+//   }
+// }
+// void transmitterTask(void *pvParameters) {
+//   while(1){
+//     if (isValidPacket(payload)) {
+//       updateLastPacket(payload);
+//       radio.stopListening();
+//       bool ok = radio.write(&payload, sizeof(payload));
+//       Serial.print(" - ACK: ");
+//       Serial.println(ok);
+//     } else {
+//       Serial.println("Duplicate packet ignored");
+//     }  
+//     vTaskDelay(50 / portTICK_PERIOD_MS);
+//   }
   
-}
+// }
